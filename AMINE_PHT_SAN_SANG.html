@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyên Án Amine - Hóa 12 (Bản Nâng Cấp Quét Lỗi)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a; /* Xanh đen trinh thám */
+            --primary-light: #3b82f6;
+            --secondary: #dc2626; /* Đỏ cảnh báo */
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --success: #10b981;
+            --danger: #ef4444;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 15px 10px; display: flex; justify-content: center; line-height: 1.6; }
+        .container { max-width: 850px; width: 100%; }
+
+        /* Style Card Hồ sơ */
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); border-top: 5px solid var(--primary); }
+        .header-card { text-align: center; background: linear-gradient(135deg, #0f172a, #1e3a8a); color: white; border-top: none; }
+        .header-card h1 { margin: 0 0 5px 0; font-size: 1.8rem; text-transform: uppercase; color: #f87171; }
+        .header-card h2 { margin: 0 0 15px 0; font-size: 1.1rem; font-weight: 500; opacity: 0.9; }
+        
+        /* Form thông tin */
+        .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; }
+        .student-info input { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; text-align: center;}
+
+        h3 { color: var(--primary); margin-top: 0; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; text-transform: uppercase; font-size: 1.2rem;}
+        
+        /* Video */
+        .video-container { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 20px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .video-container video { width: 100%; display: block; }
+
+        /* Input & Select */
+        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1.5px solid #d1d5db; border-radius: 6px; font-size: 15px; transition: 0.3s; font-family: 'Roboto', sans-serif;}
+        input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
+
+        .question { margin-bottom: 20px; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .question-text { font-weight: bold; margin-top: 0; margin-bottom: 12px; font-size: 1.05rem; }
+
+        /* Trắc nghiệm & Đúng Sai */
+        .options label { display: flex; align-items: center; margin-bottom: 8px; cursor: pointer; padding: 10px; border-radius: 6px; background: #fff; border: 1px solid #e5e7eb; transition: 0.2s; }
+        .options label:hover { background: #f3f4f6; }
+        .options input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
+        .tf-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+        .tf-opts { display: flex; gap: 10px; justify-content: flex-end; }
+        .tf-opts label { background: #fff; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 0.9rem; cursor: pointer;}
+        
+        /* Bảng */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; background: #fff; }
+        th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; vertical-align: middle; }
+        th { background-color: var(--primary); color: white; text-align: center; font-weight: 500;}
+
+        /* Nút nộp bài */
+        .btn-submit { width: 100%; border: none; padding: 16px; font-size: 16px; border-radius: 30px; cursor: pointer; font-weight: bold; text-transform: uppercase; color: white; background: linear-gradient(135deg, var(--secondary), #991b1b); box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3); margin-top: 20px;}
+        
+        #score-board { display: none; text-align: center; padding: 20px; margin-top: 20px; background: #ecfdf5; border: 2px solid var(--success); border-radius: 12px; font-size: 1.5rem; font-weight: bold; color: #065f46; }
+        .error-analysis { margin-top: 15px; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; padding: 15px; text-align: left; font-size: 1rem; color: #374151; }
+        .error-analysis h4 { margin: 0 0 10px 0; color: var(--secondary); text-transform: uppercase; }
+
+        .correct { border-color: var(--success) !important; background-color: #d1fae5 !important; }
+        .wrong { border-color: var(--danger) !important; background-color: #fee2e2 !important; }
+        .feedback { display: block; font-size: 0.85rem; margin-top: 5px; font-weight: bold; }
+        .feedback.ok { color: var(--success); }
+        .feedback.err { color: var(--danger); }
+
+        @media(max-width: 600px) { 
+            .student-info { grid-template-columns: 1fr; } 
+            .tf-grid { grid-template-columns: 1fr; }
+            .tf-opts { justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- TRẠM CHỈ HUY -->
+        <div class="card header-card">
+            <h1>HỒ SƠ VỤ ÁN: BÍ ẨN MÙI TANH CỦA CÁ</h1>
+            <h2>CHUYÊN ĐỀ AMINE - MÔN HÓA HỌC 12</h2>
+            
+            <div class="video-container">
+                <video controls>
+                    <source src="Giải_mã_mùi_tanh_cá_20261012214737.mp4" type="video/mp4">
+                    Trình duyệt của bạn không hỗ trợ video.
+                </video>
+            </div>
+
+            <div class="student-info">
+                <input type="text" id="studentName" placeholder="Mã định danh thám tử (Họ và tên)..." required>
+                <input type="text" id="studentClass" placeholder="Đơn vị (Lớp)..." required>
+            </div>
+        </div>
+
+        <form id="quizForm">
+            <!-- HỒ SƠ 01 -->
+            <div class="card">
+                <h3>🔍 HỒ SƠ 01 – NHẬN DIỆN NGHI PHẠM</h3>
+                <p style="font-style: italic;"><b>Dấu vết cấu tạo:</b> Amine là dẫn xuất của ammonia khi thay một hay nhiều nguyên tử hydrogen trong phân tử NH₃ bằng gốc hydrocarbon. Bậc amine được xác định bằng số gốc hydrocarbon liên kết trực tiếp với nguyên tử nitrogen.</p>
+                
+                <div class="question">
+                    <p class="question-text">Điền bảng nhận diện các chất sau:</p>
+                    <table>
+                        <tr>
+                            <th style="width: 30%;">Công thức</th>
+                            <th>Chọn Tên gọi & Bậc amine tương ứng</th>
+                        </tr>
+                        <tr>
+                            <td><b>CH₃NH₂</b></td>
+                            <td>
+                                <select class="check-select" data-ans="1">
+                                    <option value="">-- Chọn danh phận --</option>
+                                    <option value="1">Methylamine / Methanamine (Bậc 1)</option>
+                                    <option value="2">Dimethylamine (Bậc 2)</option>
+                                    <option value="3">Trimethylamine (Bậc 3)</option>
+                                    <option value="4">Aniline / Phenylamine (Bậc 1)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>CH₃NHCH₃</b></td>
+                            <td>
+                                <select class="check-select" data-ans="2">
+                                    <option value="">-- Chọn danh phận --</option>
+                                    <option value="1">Methylamine / Methanamine (Bậc 1)</option>
+                                    <option value="2">Dimethylamine (Bậc 2)</option>
+                                    <option value="3">Trimethylamine (Bậc 3)</option>
+                                    <option value="4">Aniline / Phenylamine (Bậc 1)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>(CH₃)₃N</b></td>
+                            <td>
+                                <select class="check-select" data-ans="3">
+                                    <option value="">-- Chọn danh phận --</option>
+                                    <option value="1">Methylamine / Methanamine (Bậc 1)</option>
+                                    <option value="2">Dimethylamine (Bậc 2)</option>
+                                    <option value="3">Trimethylamine (Bậc 3)</option>
+                                    <option value="4">Aniline / Phenylamine (Bậc 1)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>C₆H₅NH₂</b></td>
+                            <td>
+                                <select class="check-select" data-ans="4">
+                                    <option value="">-- Chọn danh phận --</option>
+                                    <option value="1">Methylamine / Methanamine (Bậc 1)</option>
+                                    <option value="2">Dimethylamine (Bậc 2)</option>
+                                    <option value="3">Trimethylamine (Bậc 3)</option>
+                                    <option value="4">Aniline / Phenylamine (Bậc 1)</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="question">
+                    <p class="question-text">Xác định chất nào trong các chất trên gắn với mùi tanh đặc trưng của cá ươn?</p>
+                    <input type="text" class="check-text" data-ans="trimethylamine,(ch3)3n" placeholder="Nhập tên hoặc công thức hóa học...">
+                    <span class="feedback"></span>
+                </div>
+            </div>
+
+            <!-- HỒ SƠ 02 -->
+            <div class="card">
+                <h3>🔬 HỒ SƠ 02 – PHÂN TÍCH DẤU VẾT</h3>
+                
+                <div class="question">
+                    <p class="question-text">Hoàn thành bảng so sánh cho Methylamine và Aniline:</p>
+                    <table>
+                        <tr>
+                            <th style="width: 35%;">Tiêu chí</th>
+                            <th>Methylamine</th>
+                            <th>Aniline</th>
+                        </tr>
+                        <tr>
+                            <td><b>Trạng thái đk thường</b></td>
+                            <td>
+                                <select class="check-select" data-ans="khi">
+                                    <option value="">-Chọn-</option><option value="khi">Chất Khí</option><option value="long">Chất Lỏng</option><option value="ran">Chất Rắn</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="check-select" data-ans="long">
+                                    <option value="">-Chọn-</option><option value="khi">Chất Khí</option><option value="long">Chất Lỏng</option><option value="ran">Chất Rắn</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Độ tan trong nước</b></td>
+                            <td>
+                                <select class="check-select" data-ans="tot">
+                                    <option value="">-Chọn-</option><option value="tot">Tan rất tốt (vô hạn)</option><option value="it">Ít tan / Không tan</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="check-select" data-ans="it">
+                                    <option value="">-Chọn-</option><option value="tot">Tan rất tốt (vô hạn)</option><option value="it">Ít tan / Không tan</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Vì sao cả hai phân tử đều có nhóm –NH₂ nhưng tính chất vật lí không hoàn toàn giống nhau?</p>
+                    <textarea rows="2" placeholder="Nhập lời giải thích của thám tử... (Hệ thống sẽ ghi nhận câu trả lời này để Chỉ huy chấm điểm sau)"></textarea>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Cho các chất sau: NH₃(1), CH₃NH₂(2), (CH₃)₂NH(3), C₆H₅NH₂(4). Hãy sắp xếp theo thứ tự tính base TĂNG DẦN:</p>
+                    <div class="options check-mcq" data-ans="A">
+                        <label><input type="radio" name="hs2_base" value="A"> A. 4 < 1 < 2 < 3</label>
+                        <label><input type="radio" name="hs2_base" value="B"> B. 4 < 1 < 3 < 2</label>
+                        <label><input type="radio" name="hs2_base" value="C"> C. 1 < 4 < 2 < 3</label>
+                        <label><input type="radio" name="hs2_base" value="D"> D. 1 < 2 < 3 < 4</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Dự đoán: Nếu mùi tanh liên quan đến một amine có tính base, điều gì có thể xảy ra khi chất đó phản ứng với một dung dịch acid?</p>
+                    <textarea rows="2" placeholder="Gợi ý: Phản ứng hóa học nào xảy ra? Mùi tanh còn không?..."></textarea>
+                </div>
+            </div>
+
+            <!-- HỒ SƠ 03 -->
+            <div class="card">
+                <h3>🧪 HỒ SƠ 03 – THẨM VẤN BẰNG CHỨNG</h3>
+                <div class="question">
+                    <p class="question-text">Xác định Hiện tượng dự kiến hoặc quan sát được:</p>
+                    <table>
+                        <tr>
+                            <th style="width: 50%;">Thí nghiệm / Thuốc thử</th>
+                            <th>Hiện tượng</th>
+                        </tr>
+                        <tr>
+                            <td><b>Dung dịch methylamine + quỳ tím</b></td>
+                            <td>
+                                <select class="check-select" data-ans="1">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="1">Quỳ tím hóa xanh</option>
+                                    <option value="2">Khói trắng (tạo muối)</option>
+                                    <option value="3">Kết tủa màu nâu đỏ</option>
+                                    <option value="4">Kết tủa tan, tạo dung dịch phức xanh lam</option>
+                                    <option value="5">Mất màu, xuất hiện kết tủa trắng</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Dung dịch methylamine + HCl</b></td>
+                            <td>
+                                <select class="check-select" data-ans="2">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="1">Quỳ tím hóa xanh</option>
+                                    <option value="2">Khói trắng (tạo dung dịch trong suốt)</option>
+                                    <option value="3">Kết tủa màu nâu đỏ</option>
+                                    <option value="4">Kết tủa tan, tạo dung dịch phức xanh lam</option>
+                                    <option value="5">Mất màu, xuất hiện kết tủa trắng</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Dung dịch methylamine + FeCl₃</b></td>
+                            <td>
+                                <select class="check-select" data-ans="3">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="1">Quỳ tím hóa xanh</option>
+                                    <option value="2">Khói trắng (tạo muối)</option>
+                                    <option value="3">Xuất hiện kết tủa màu nâu đỏ</option>
+                                    <option value="4">Kết tủa tan, tạo dung dịch phức xanh lam</option>
+                                    <option value="5">Mất màu, xuất hiện kết tủa trắng</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Methylamine dư + Cu(OH)₂</b></td>
+                            <td>
+                                <select class="check-select" data-ans="4">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="1">Quỳ tím hóa xanh</option>
+                                    <option value="2">Khói trắng (tạo muối)</option>
+                                    <option value="3">Kết tủa màu nâu đỏ</option>
+                                    <option value="4">Kết tủa tan, tạo dung dịch phức xanh lam đậm</option>
+                                    <option value="5">Mất màu, xuất hiện kết tủa trắng</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Aniline + nước bromine</b></td>
+                            <td>
+                                <select class="check-select" data-ans="5">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="1">Quỳ tím hóa xanh</option>
+                                    <option value="2">Khói trắng (tạo muối)</option>
+                                    <option value="3">Kết tủa màu nâu đỏ</option>
+                                    <option value="4">Kết tủa tan, tạo dung dịch phức xanh lam</option>
+                                    <option value="5">Mất màu, xuất hiện kết tủa trắng</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HỒ SƠ 04 -->
+            <div class="card">
+                <h3>⚖️ HỒ SƠ 04 – KẾT LUẬN VỤ ÁN</h3>
+                
+                <!-- I. Trắc nghiệm -->
+                <div style="color: var(--secondary); font-weight: bold; margin-bottom: 10px; font-size: 1.1rem;">I. CÂU HỎI NHIỀU LỰA CHỌN</div>
+                
+                <div class="question check-mcq" data-ans="B">
+                    <p class="question-text">1. Bậc của amine được xác định dựa vào:</p>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="A"> A. Tổng số nguyên tử carbon</label>
+                        <label><input type="radio" name="q1" value="B"> B. Số gốc hydrocarbon liên kết trực tiếp với N</label>
+                        <label><input type="radio" name="q1" value="C"> C. Số nguyên tử hydrogen trong phân tử</label>
+                        <label><input type="radio" name="q1" value="D"> D. Số liên kết đôi</label>
+                    </div>
+                </div>
+
+                <div class="question check-mcq" data-ans="C">
+                    <p class="question-text">2. Chất nào không phải amine?</p>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="A"> A. CH₃NH₂</label>
+                        <label><input type="radio" name="q2" value="B"> B. C₆H₅NH₂</label>
+                        <label><input type="radio" name="q2" value="C"> C. CH₃CONH₂</label>
+                        <label><input type="radio" name="q2" value="D"> D. (CH₃)₂NH</label>
+                    </div>
+                </div>
+
+                <div class="question check-mcq" data-ans="A">
+                    <p class="question-text">3. Cho nước bromine vào aniline, dấu hiệu đặc trưng là:</p>
+                    <div class="options">
+                        <label><input type="radio" name="q3" value="A"> A. Kết tủa trắng</label>
+                        <label><input type="radio" name="q3" value="B"> B. Kết tủa nâu đỏ</label>
+                        <label><input type="radio" name="q3" value="C"> C. Khí không màu</label>
+                        <label><input type="radio" name="q3" value="D"> D. Kết tủa xanh</label>
+                    </div>
+                </div>
+
+                <div class="question check-mcq" data-ans="A">
+                    <p class="question-text">4. Tính base của amine chủ yếu liên quan đến:</p>
+                    <div class="options">
+                        <label><input type="radio" name="q4" value="A"> A. Cặp electron tự do trên N</label>
+                        <label><input type="radio" name="q4" value="B"> B. Liên kết C–C</label>
+                        <label><input type="radio" name="q4" value="C"> C. Khối lượng phân tử</label>
+                        <label><input type="radio" name="q4" value="D"> D. Màu sắc chất</label>
+                    </div>
+                </div>
+
+                <div class="question check-mcq" data-ans="A">
+                    <p class="question-text">5. Cho các phát biểu về tính chất hoá học của dung dịch methylamine:<br>
+                    (1) Làm quỳ tím hóa hồng.<br>(2) Phản ứng với HCl tạo thành CH₃NH₃Cl.<br>(3) Hoà tan Cu(OH)₂ tạo thành dung dịch màu xanh lam.<br>(4) Phản ứng với HNO₃ ở nhiệt độ thường tạo thành CH₃OH.<br>(5) Phản ứng với FeCl₃ tạo thành kết tủa Fe(OH)₃.<br>
+                    Số phát biểu đúng là bao nhiêu?</p>
+                    <div class="options">
+                        <label><input type="radio" name="q5" value="A"> A. 3</label>
+                        <label><input type="radio" name="q5" value="B"> B. 4</label>
+                        <label><input type="radio" name="q5" value="C"> C. 2</label>
+                        <label><input type="radio" name="q5" value="D"> D. 5</label>
+                    </div>
+                </div>
+
+                <div class="question check-mcq" data-ans="A">
+                    <p class="question-text">6. Cho 0,1 mol aniline tác dụng vừa đủ với dung dịch HCl thu được m gam muối khan. Giá trị của m là</p>
+                    <div class="options">
+                        <label><input type="radio" name="q6" value="A"> A. 12,95</label>
+                        <label><input type="radio" name="q6" value="B"> B. 26,70</label>
+                        <label><input type="radio" name="q6" value="C"> C. 22,50</label>
+                        <label><input type="radio" name="q6" value="D"> D. 8,90</label>
+                    </div>
+                </div>
+
+                <!-- II. Đúng Sai -->
+                <div style="color: var(--secondary); font-weight: bold; margin: 30px 0 10px 0; font-size: 1.1rem;">II. PHẦN ĐÚNG – SAI</div>
+                
+                <div class="question">
+                    <p class="question-text">Câu 1. Về định nghĩa, phân loại và danh pháp của amine:</p>
+                    <div class="tf-grid check-tf" data-ans="T">
+                        <span>a. Amine là dẫn xuất của ammonia khi thay thế một hay nhiều nguyên tử hydrogen bằng gốc hydrocarbon.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf1a" value="T"> ĐÚNG</label><label><input type="radio" name="tf1a" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="T">
+                        <span>b. Tuỳ thuộc vào số lượng nguyên tử hydrogen của phân tử ammonia bị thay thế, amine được phân thành amine bậc I, bậc II và bậc III.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf1b" value="T"> ĐÚNG</label><label><input type="radio" name="tf1b" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="F">
+                        <span>c. Hợp chất CH₃-NH-CH₃ là alkylamine bậc I vì mạch carbon của nó không phân nhánh.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf1c" value="T"> ĐÚNG</label><label><input type="radio" name="tf1c" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="T" style="border:none;">
+                        <span>d. Aniline có tên thay thế là benzenamine và thuộc loại arylamine (amine thơm).</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf1d" value="T"> ĐÚNG</label><label><input type="radio" name="tf1d" value="F"> SAI</label></div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Câu 2. Về đặc điểm cấu tạo và tính chất vật lí của amine:</p>
+                    <div class="tf-grid check-tf" data-ans="T">
+                        <span>a. Trong phân tử amine, nguyên tử nitrogen còn một cặp electron chưa liên kết, là nguyên nhân chính gây ra tính base.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf2a" value="T"> ĐÚNG</label><label><input type="radio" name="tf2a" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="T">
+                        <span>b. Ở điều kiện thường, methylamine và ethylamine là chất khí, tan vô hạn trong nước do có khả năng tạo liên kết hydrogen với nước.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf2b" value="T"> ĐÚNG</label><label><input type="radio" name="tf2b" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="F">
+                        <span>c. Aniline là chất lỏng, tan rất tốt trong nước lạnh tạo dung dịch có môi trường base mạnh.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf2c" value="T"> ĐÚNG</label><label><input type="radio" name="tf2c" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="F" style="border:none;">
+                        <span>d. Nhiệt độ sôi của các amine no, mạch hở luôn thấp hơn nhiệt độ sôi của các hydrocarbon có cùng số nguyên tử carbon.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf2d" value="T"> ĐÚNG</label><label><input type="radio" name="tf2d" value="F"> SAI</label></div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Câu 3. Thí nghiệm của aniline với nước bromine:</p>
+                    <div class="tf-grid check-tf" data-ans="T">
+                        <span>a. Hiện tượng xảy ra là dung dịch bromine bị mất màu và xuất hiện kết tủa trắng.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf3a" value="T"> ĐÚNG</label><label><input type="radio" name="tf3a" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="F">
+                        <span>b. Kết tủa trắng thu được là 2,4,6-tribromobenzene.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf3b" value="T"> ĐÚNG</label><label><input type="radio" name="tf3b" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="T">
+                        <span>c. Phản ứng này chứng minh ảnh hưởng của nhóm -NH₂ làm tăng mật độ electron ở các vị trí ortho và para trên vòng benzene.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf3c" value="T"> ĐÚNG</label><label><input type="radio" name="tf3c" value="F"> SAI</label></div>
+                    </div>
+                    <div class="tf-grid check-tf" data-ans="T" style="border:none;">
+                        <span>d. Có thể dùng phản ứng này để phân biệt aniline và methylamine trong phòng thí nghiệm.</span>
+                        <div class="tf-opts"><label><input type="radio" name="tf3d" value="T"> ĐÚNG</label><label><input type="radio" name="tf3d" value="F"> SAI</label></div>
+                    </div>
+                </div>
+
+                <!-- III. Trả lời ngắn -->
+                <div style="color: var(--secondary); font-weight: bold; margin: 30px 0 10px 0; font-size: 1.1rem;">III. TRẢ LỜI NGẮN</div>
+                
+                <div class="question">
+                    <p class="question-text">Câu 1. Có bao nhiêu công thức cấu tạo là amine ứng với công thức phân tử là C₃H₉N?</p>
+                    <input type="text" class="check-text" data-ans="4,bốn" placeholder="Nhập đáp án (chỉ ghi số)...">
+                    <span class="feedback"></span>
+                </div>
+                <div class="question">
+                    <p class="question-text">Câu 2. Cho các chất sau: NaCl, NaOH, HCl, FeCl₃, Cu(OH)₂, HNO₂. Có bao nhiêu chất có khả năng tham gia phản ứng hoá học với ethylamine (C₂H₅NH₂) ở điều kiện thường?</p>
+                    <input type="text" class="check-text" data-ans="4,bốn" placeholder="Nhập đáp án (chỉ ghi số)...">
+                    <span class="feedback"></span>
+                </div>
+                <div class="question">
+                    <p class="question-text" style="line-height: 1.5;">Câu 3. Từ cây chùm ngây (Moringa oleifera), người ta phân lập được hợp chất hữu cơ X. Chất X có vai trò như một chất ức chế, chất chuyển hóa thực vật và còn là chất gây dị ứng. Kết quả phân tích nguyên tố của X cho phần trăm khối lượng các nguyên tố như sau: 78,50% C; 8,41% H; còn lại là N. Bằng các phương pháp khác, người ta xác định được X có chứa vòng benzene, chỉ có 1 nguyên tử N và không có nhóm -CH₃.<br>
+                    Cho các phát biểu sau về X:<br>
+                    (1) Công thức phân tử của X là C₇H₉N.<br>
+                    (2) X là một arylamine.<br>
+                    (3) Ở nhiệt độ thường, X tác dụng với dung dịch nitrous acid tạo alcohol.<br>
+                    (4) X tác dụng với dung dịch HCl tạo ra muối có dạng RNH₃Cl.<br>
+                    (5) X là một amine bậc 2.<br>
+                    <b>Hãy liệt kê các phát biểu đúng theo số thứ tự tăng dần.</b></p>
+                    <input type="text" class="check-text" data-ans="134,1,3,4,1 3 4" placeholder="Ví dụ nhập: 125">
+                    <span class="feedback"></span>
+                </div>
+            </div>
+            
+            <div id="score-board">
+                <div id="score-text"></div>
+                <div id="error-breakdown" class="error-analysis"></div>
+            </div>
+            
+            <button type="button" class="btn-submit" onclick="gradeQuiz()">🚀 NỘP BÀI & ĐÓNG ÁN</button>
+        </form>
+    </div>
+
+    <!-- LOGIC CHẤM ĐIỂM & QUÉT LỖI CHI TIẾT -->
+    <script>
+        function gradeQuiz() {
+            let name = document.getElementById('studentName').value;
+            if(!name) { alert("Vui lòng nhập Mã định danh thám tử (Họ và tên)!"); return; }
+
+            let correctItems = 0;
+            let totalItems = 0;
+
+            // Biến thống kê lỗi sai theo từng phần (Bộ quét lỗi chuyên sâu)
+            let errorStats = {
+                "Hồ sơ 01 (Nhận diện & Tên gọi)": 0,
+                "Hồ sơ 02 (Tính chất vật lí & Base)": 0,
+                "Hồ sơ 03 (Thẩm vấn thí nghiệm)": 0,
+                "Hồ sơ 04 - Trắc nghiệm": 0,
+                "Hồ sơ 04 - Đúng / Sai": 0,
+                "Hồ sơ 04 - Trả lời ngắn": 0
+            };
+            
+            let totalByPart = {
+                "Hồ sơ 01 (Nhận diện & Tên gọi)": 5, 
+                "Hồ sơ 02 (Tính chất vật lí & Base)": 5, 
+                "Hồ sơ 03 (Thẩm vấn thí nghiệm)": 5, 
+                "Hồ sơ 04 - Trắc nghiệm": 6,
+                "Hồ sơ 04 - Đúng / Sai": 12, 
+                "Hồ sơ 04 - Trả lời ngắn": 3
+            };
+
+            // 1. Chấm phần Select (Dropdown)
+            document.querySelectorAll('.check-select').forEach(el => {
+                totalItems++;
+                el.classList.remove('correct', 'wrong');
+                
+                let partName = "Hồ sơ 01 (Nhận diện & Tên gọi)";
+                let cardParent = el.closest('.card');
+                if(cardParent.innerHTML.includes('HỒ SƠ 02')) partName = "Hồ sơ 02 (Tính chất vật lí & Base)";
+                if(cardParent.innerHTML.includes('HỒ SƠ 03')) partName = "Hồ sơ 03 (Thẩm vấn thí nghiệm)";
+
+                if(el.value === el.getAttribute('data-ans')) {
+                    el.classList.add('correct');
+                    correctItems++;
+                } else {
+                    el.classList.add('wrong');
+                    errorStats[partName]++;
+                }
+            });
+
+            // 2. Chấm phần Điền từ / Trả lời ngắn (Text)
+            document.querySelectorAll('.check-text').forEach(el => {
+                totalItems++;
+                el.classList.remove('correct', 'wrong');
+                let userVal = el.value.trim().toLowerCase();
+                let ansArr = el.getAttribute('data-ans').split(',');
+                let feedback = el.nextElementSibling;
+                
+                let partName = "Hồ sơ 01 (Nhận diện & Tên gọi)";
+                if(el.closest('.card').innerHTML.includes('TRẢ LỜI NGẮN')) partName = "Hồ sơ 04 - Trả lời ngắn";
+
+                if (ansArr.includes(userVal) && userVal !== "") {
+                    el.classList.add('correct');
+                    if(feedback) { feedback.className = 'feedback ok'; feedback.innerText = "✓ Chính xác!"; }
+                    correctItems++;
+                } else {
+                    el.classList.add('wrong');
+                    errorStats[partName]++;
+                    if(feedback) { feedback.className = 'feedback err'; feedback.innerText = "✗ Sai (Gợi ý: " + ansArr[0] + ")"; }
+                }
+            });
+
+            // 3. Chấm phần Trắc nghiệm (MCQ)
+            document.querySelectorAll('.check-mcq').forEach(el => {
+                totalItems++;
+                let correctAns = el.getAttribute('data-ans');
+                let selected = el.querySelector('input[type="radio"]:checked');
+                
+                let partName = "Hồ sơ 04 - Trắc nghiệm";
+                if(el.closest('.card').innerHTML.includes('HỒ SƠ 02')) partName = "Hồ sơ 02 (Tính chất vật lí & Base)";
+
+                el.querySelectorAll('label').forEach(lbl => {
+                    lbl.style.borderColor = "#e5e7eb"; lbl.style.backgroundColor = "#fff";
+                });
+
+                if (selected) {
+                    if (selected.value === correctAns) {
+                        selected.parentElement.style.borderColor = "var(--success)";
+                        selected.parentElement.style.backgroundColor = "#d1fae5";
+                        correctItems++;
+                    } else {
+                        selected.parentElement.style.borderColor = "var(--danger)";
+                        selected.parentElement.style.backgroundColor = "#fee2e2";
+                        errorStats[partName]++;
+                        let correctLabel = el.querySelector(`input[value="${correctAns}"]`).parentElement;
+                        correctLabel.style.borderColor = "var(--success)";
+                    }
+                } else {
+                    errorStats[partName]++;
+                    let correctLabel = el.querySelector(`input[value="${correctAns}"]`).parentElement;
+                    correctLabel.style.borderColor = "var(--success)";
+                }
+            });
+
+            // 4. Chấm phần Đúng Sai (TF)
+            document.querySelectorAll('.check-tf').forEach(el => {
+                totalItems++;
+                let correctAns = el.getAttribute('data-ans');
+                let selected = el.querySelector('input[type="radio"]:checked');
+                
+                el.querySelectorAll('label').forEach(lbl => lbl.style.backgroundColor = "#fff");
+
+                if (selected) {
+                    if (selected.value === correctAns) {
+                        selected.parentElement.style.backgroundColor = "#d1fae5";
+                        correctItems++;
+                    } else {
+                        selected.parentElement.style.backgroundColor = "#fee2e2";
+                        errorStats["Hồ sơ 04 - Đúng / Sai"]++;
+                    }
+                } else {
+                    errorStats["Hồ sơ 04 - Đúng / Sai"]++;
+                }
+            });
+
+            // Tính điểm thang 10
+            let finalScore = (correctItems / totalItems) * 10;
+            
+            let board = document.getElementById('score-board');
+            board.style.display = 'block';
+            
+            let scoreTextHTML = `ĐIỂM CỦA THÁM TỬ: ${finalScore.toFixed(2)} / 10<br><span style="font-size:1.1rem; color:#4b5563;">(Khám phá đúng ${correctItems}/${totalItems} manh mối)</span>`;
+            document.getElementById('score-text').innerHTML = scoreTextHTML;
+
+            // Xây dựng báo cáo quét lỗi chi tiết
+            let breakdownHTML = `<h4>📊 Báo cáo phân tích lỗi sai (Hệ thống AI):</h4><ul>`;
+            for (let part in errorStats) {
+                let errCount = errorStats[part];
+                let totalPart = totalByPart[part] || 1;
+                let errPercent = Math.round((errCount / totalPart) * 100);
+                let colorStyle = errPercent > 50 ? "color: red; font-weight: bold;" : "color: green;";
+                breakdownHTML += `<li><b>${part}:</b> Sai ${errCount}/${totalPart} câu (<span style="${colorStyle}">${errPercent}% lỗi</span>)</li>`;
+            }
+            breakdownHTML += `</ul>`;
+            document.getElementById('error-breakdown').innerHTML = breakdownHTML;
+            
+            // -- BẮT ĐẦU PHẦN GỬI DỮ LIỆU LÊN GOOGLE SHEETS --
+            let webAppUrl = "https://script.google.com/macros/s/AKfycbwfIovgW-ZJ8iqqGVTKnM7flMl172gq166Mj4jJQg-kFuf1mF43EZ_fmUHb-bNqXh9S/exec"; // Cô copy link Apps Script dán vào đây (giữ nguyên cặp dấu ngoặc kép)
+
+            let payload = {
+                hoTen: name,
+                lop: document.getElementById('studentClass').value || "Không ghi",
+                diem: finalScore.toFixed(2),
+                cauDung: correctItems,
+                cauSai: totalItems - correctItems,
+                // Đây chính là đoạn code gửi 6 cột lỗi sai lên Google Sheets
+                loi_hs1: errorStats["Hồ sơ 01 (Nhận diện & Tên gọi)"],
+                loi_hs2: errorStats["Hồ sơ 02 (Tính chất vật lí & Base)"],
+                loi_hs3: errorStats["Hồ sơ 03 (Thẩm vấn thí nghiệm)"],
+                loi_hs4_mcq: errorStats["Hồ sơ 04 - Trắc nghiệm"],
+                loi_hs4_tf: errorStats["Hồ sơ 04 - Đúng / Sai"],
+                loi_hs4_short: errorStats["Hồ sơ 04 - Trả lời ngắn"]
+            };
+
+            let submitBtn = document.querySelector('.btn-submit');
+            let originalText = submitBtn.innerText;
+            submitBtn.innerText = "⏳ ĐANG LƯU DỮ LIỆU LÊN HỆ THỐNG...";
+            submitBtn.disabled = true;
+
+            fetch(webAppUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                submitBtn.innerText = "✅ ĐÃ NỘP BÀI & LƯU ĐIỂM THÀNH CÔNG";
+            })
+            .catch(error => {
+                // Nếu chưa điền link URL, nó sẽ báo lỗi này
+                submitBtn.innerText = "⚠️ LƯU ĐIỂM TRÊN MÁY (CHƯA KẾT NỐI SHEETS)";
+                submitBtn.disabled = false;
+            });
+            // -- KẾT THÚC PHẦN GỬI DỮ LIỆU --
+            
+        }
+    </script>
+</body>
+</html>
